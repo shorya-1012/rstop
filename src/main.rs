@@ -2,7 +2,7 @@ mod utils;
 
 use std::{collections::VecDeque, time::Duration};
 
-use crossterm::event::{self, Event};
+use crossterm::event::{self, Event, KeyCode};
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Direction, Layout},
@@ -30,6 +30,8 @@ pub struct App {
     ram_history: VecDeque<f64>,
     cpu_history: VecDeque<f64>,
     max_capacity: u8,
+    ram_layout_color: Color,
+    cpu_layout_color: Color,
 }
 
 impl App {
@@ -40,6 +42,8 @@ impl App {
             ram_history: VecDeque::new(),
             cpu_history: VecDeque::new(),
             max_capacity: 60,
+            ram_layout_color: Color::White,
+            cpu_layout_color: Color::White,
         }
     }
 
@@ -54,14 +58,15 @@ impl App {
                 .expect("Unable to Draw");
 
             if event::poll(Duration::from_millis(100)).unwrap() {
-                if let Event::Key(_) = event::read().unwrap() {
-                    self.exit = true;
-                    break;
+                if let Event::Key(key) = event::read().unwrap() {
+                    if key.code == KeyCode::Char('q') {
+                        self.exit = true;
+                        break;
+                    }
                 }
             }
 
             std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
-            // std::thread::sleep(Duration::from_secs(1));
         }
     }
 
@@ -135,7 +140,7 @@ impl App {
                 Block::new()
                     .title("Memory")
                     .bold()
-                    .fg(Color::White)
+                    .fg(self.ram_layout_color)
                     .borders(Borders::ALL),
             )
             .x_axis(
@@ -182,7 +187,7 @@ impl App {
                 Block::new()
                     .title(format!("CPU - {}", System::cpu_arch()))
                     .bold()
-                    .fg(Color::White)
+                    .fg(self.cpu_layout_color)
                     .borders(Borders::ALL),
             )
             .x_axis(
@@ -237,7 +242,7 @@ impl App {
                 Block::new()
                     .title("Usage")
                     .bold()
-                    .fg(Color::White)
+                    .fg(self.ram_layout_color)
                     .borders(Borders::ALL),
             ),
             ram_data_layout[0],
@@ -248,7 +253,7 @@ impl App {
                 Block::new()
                     .title("Disk")
                     .bold()
-                    .fg(Color::White)
+                    .fg(self.ram_layout_color)
                     .borders(Borders::ALL),
             ),
             ram_data_layout[1],
